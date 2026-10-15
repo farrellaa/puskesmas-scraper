@@ -19,13 +19,13 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
   app:
-    image: puskesmas-scraper:rust-hybrid
+    image: puskesmas-scraper:0.2.0
     init: true
     environment:
       DATABASE_URL: postgresql://puskesmas:${POSTGRES_PASSWORD}@postgres:5432/puskesmas_rust
       SYSTEM_DATA_DIR: /data
       SYSTEM_BIND: 0.0.0.0:8788
-      SYSTEM_MAX_CONCURRENT_JOBS: "1"
+      SYSTEM_MAX_CONCURRENT_JOBS: "${SYSTEM_MAX_CONCURRENT_JOBS:-1}"
       SYSTEM_ALLOW_PRIVATE_DESTINATIONS: ${ALLOW_PRIVATE_DESTINATIONS:-false}
       DUMMY_ENDPOINT: ${DUMMY_ENDPOINT:-http://dummy:8110/ingest}
       RUST_LOG: ${RUST_LOG:-info}
@@ -35,9 +35,10 @@ services:
     tmpfs: ["/tmp:rw,nosuid,size=256m,mode=1777"]
     read_only: true
     cap_drop: [ALL]
-    cap_add: [SETUID, SETGID, CHOWN, DAC_OVERRIDE]
+    # The root controller must terminate its UID 10002 browser worker on cancel/deadline.
+    cap_add: [SETUID, SETGID, CHOWN, DAC_OVERRIDE, KILL]
     shm_size: 512m
-    mem_limit: 2g
+    mem_limit: ${APP_MEMORY_LIMIT:-2g}
     depends_on:
       postgres: {condition: service_healthy}
     restart: unless-stopped
@@ -46,7 +47,7 @@ services:
       options: {max-size: "10m", max-file: "3"}
   dummy:
     profiles: [test]
-    image: puskesmas-scraper:rust-hybrid
+    image: puskesmas-scraper:0.2.0
     command: [dummy]
     environment: {DUMMY_BIND: "0.0.0.0:8110", DUMMY_DATA_DIR: "/data"}
     volumes: [dummy_data:/data]

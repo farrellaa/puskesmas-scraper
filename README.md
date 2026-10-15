@@ -13,7 +13,7 @@ Jika Docker belum terpasang pada Ubuntu, ikuti [panduan resmi Docker](https://do
 
 ## Unduh image
 
-Unduh empat aset dari [GitHub Release](https://github.com/farrellaa/puskesmas-scraper/releases/tag/v0.1.0):
+Unduh empat aset dari [GitHub Release](https://github.com/farrellaa/puskesmas-scraper/releases/tag/v0.2.0):
 
 - `puskesmas-scraper-rust-hybrid.tar.gz`
 - `puskesmas-scraper-deployment.zip`
@@ -29,7 +29,7 @@ unzip puskesmas-scraper-deployment.zip
 cd puskesmas-scraper
 ```
 
-Kedua checksum harus menampilkan `OK`. Alternatif ZIP: clone repository ini untuk memperoleh file deployment, kemudian tetap unduh dan muat image dari release. Jangan jalankan build; repository ini tidak memuat source Rust.
+Semua checksum harus menampilkan `OK`. Alternatif ZIP: clone repository ini untuk memperoleh file deployment, kemudian tetap unduh dan muat image dari release. Jangan jalankan build; repository ini tidak memuat source Rust.
 
 ## Instalasi VPS
 
@@ -45,6 +45,8 @@ WEB_PORT=3003
 COOKIE_SECURE=true
 ALLOW_PRIVATE_DESTINATIONS=false
 SCRAPER_DOMAIN=scraper.domainanda.com
+SYSTEM_MAX_CONCURRENT_JOBS=1
+APP_MEMORY_LIMIT=2g
 ```
 
 Nama domain bebas: domain utama atau subdomain, tanpa kewajiban awalan tertentu. Isi hostname saja tanpa `https://`, port, atau path. DNS harus mengarah ke VPS. Jangan membagikan `.env.local`.
@@ -113,3 +115,17 @@ Perintah menghentikan app sementara dan menyalakannya kembali setelah backup. Ba
 Untuk update: tunggu jobs selesai, backup, unduh aset versi baru, verifikasi checksum, muat image, perbarui file deployment dengan mempertahankan `.env.local`, lalu jalankan `sh deploy.sh up`. Migrasi database berjalan saat app mulai; tidak ada rollback database otomatis. Jangan menjalankan `docker compose down -v` selama data masih diperlukan.
 
 Binary Rust tetap dapat dianalisis; distribusi binary tidak menjamin perlindungan mutlak terhadap rekayasa balik. Source Rust tetap dikelola pada repository pengembangan internal.
+
+
+## Perubahan versi 0.2.0
+
+- Pengambilan pasien mencakup data medis di luar CKG, mengikuti layanan dan data yang tersedia pada portal sumber.
+- Export per pasien, JSON dengan nama field yang jelas, serta FHIR R4 JSON/NDJSON. Identifier dan referensi FHIR memakai UUID stabil dengan pemisahan per akun, Puskesmas, dan sumber. Data sumber dan kesenjangan pemetaan tetap dapat ditelusuri; export parsial tidak menyatakan semua persyaratan profil nasional sudah terpenuhi.
+- Scrape ulang memperbarui record kunjungan pasien yang sama pada tanggal yang sama. Kunjungan, tanggal, atau akun berbeda tetap dipisahkan.
+- Timeout scraping 90 menit per tanggal kunjungan. Rentang tanggal memakai timer baru tiap tanggal; timeout mempertahankan data tersimpan lalu melanjutkan tanggal berikutnya. Job tetap gagal bila ada tanggal gagal; rincian tercatat di log. Cancel menghentikan sisa rentang.
+- Admin dapat membuka **Pengaturan scraper** (`/scraper-settings`) untuk default worker pasien dan tab per pasien. Default 5 x 3; masing-masing 1–8 dengan perkalian maksimal 32. Berlaku untuk job baru tanpa restart. Mulai dengan 2 x 2 pada perangkat terbatas dan sesuaikan berdasarkan pengamatan CPU/RAM serta respons portal.
+- Deployment mendukung `SYSTEM_MAX_CONCURRENT_JOBS` (1–4, default 1) dan `APP_MEMORY_LIMIT` (default `2g`). Perubahan parameter deployment memerlukan pembuatan ulang container ketika job tidak aktif.
+- Controller container memakai capability `KILL` agar dapat menghentikan worker Linux UID 10002 pada cancel/timeout. UID worker adalah akun proses, terpisah dari identifier pasien.
+- Halaman record menyediakan JSON berindentasi, warna sintaks, buka/lipat struktur, tampilan teks, dan salin JSON tanpa mengubah angka atau identifier.
+
+Release ini menyediakan image Linux/amd64 `puskesmas-scraper:0.2.0` dan alias `puskesmas-scraper:rust-hybrid`. Compose memakai tag versi tetap. Saat upgrade, perbarui juga Compose dan README dari paket deployment; jangan hanya memuat image baru dengan Compose lama. Pertahankan `.env.local`, database, volume runtime, dan master key.
