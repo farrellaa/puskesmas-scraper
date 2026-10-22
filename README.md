@@ -13,7 +13,7 @@ Jika Docker belum terpasang pada Ubuntu, ikuti [panduan resmi Docker](https://do
 
 ## Unduh image
 
-Unduh empat aset dari [GitHub Release](https://github.com/farrellaa/puskesmas-scraper/releases/tag/v0.2.0):
+Unduh empat aset dari [GitHub Release](https://github.com/farrellaa/puskesmas-scraper/releases/tag/v0.2.1):
 
 - `puskesmas-scraper-rust-hybrid.tar.gz`
 - `puskesmas-scraper-deployment.zip`
@@ -128,4 +128,4 @@ Binary Rust tetap dapat dianalisis; distribusi binary tidak menjamin perlindunga
 - Controller container memakai capability `KILL` agar dapat menghentikan worker Linux UID 10002 pada cancel/timeout. UID worker adalah akun proses, terpisah dari identifier pasien.
 - Halaman record menyediakan JSON berindentasi, warna sintaks, buka/lipat struktur, tampilan teks, dan salin JSON tanpa mengubah angka atau identifier.
 
-Release ini menyediakan image Linux/amd64 `puskesmas-scraper:0.2.0` dan alias `puskesmas-scraper:rust-hybrid`. Compose memakai tag versi tetap. Saat upgrade, perbarui juga Compose dan README dari paket deployment; jangan hanya memuat image baru dengan Compose lama. Pertahankan `.env.local`, database, volume runtime, dan master key.
+Release ini menyediakan image Linux/amd64 `puskesmas-scraper:0.2.1` dan alias `puskesmas-scraper:rust-hybrid`. Compose memakai tag versi tetap. Saat upgrade, perbarui juga Compose dan README dari paket deployment; jangan hanya memuat image baru dengan Compose lama. Pertahankan `.env.local`, database, volume runtime, dan master key.

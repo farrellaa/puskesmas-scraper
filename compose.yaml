@@ -19,7 +19,7 @@ services:
       driver: json-file
       options: {max-size: "10m", max-file: "3"}
   app:
-    image: puskesmas-scraper:0.2.0
+    image: puskesmas-scraper:0.2.1
     init: true
     environment:
       DATABASE_URL: postgresql://puskesmas:${POSTGRES_PASSWORD}@postgres:5432/puskesmas_rust
@@ -47,7 +47,7 @@ services:
       options: {max-size: "10m", max-file: "3"}
   dummy:
     profiles: [test]
-    image: puskesmas-scraper:0.2.0
+    image: puskesmas-scraper:0.2.1
     command: [dummy]
     environment: {DUMMY_BIND: "0.0.0.0:8110", DUMMY_DATA_DIR: "/data"}
     volumes: [dummy_data:/data]
